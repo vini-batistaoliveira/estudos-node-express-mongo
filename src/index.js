@@ -16,5 +16,5 @@ app.use('/files', express.static(path.resolve(__dirname, '..', 'temp', 'uploads'
 require('./app/controllers/index')(app);
 
 app.listen(21057, () =>{
-    console.log('App rodando na porta 3000');
+    console.log('App rodando na porta 21057');
 });
