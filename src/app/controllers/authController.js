@@ -11,7 +11,7 @@ const User = require('../models/User');
 const router = express.Router();
 
 function generateToken(params = {}){
-    
+
     return jwt.sign(params, authConfig.secret, {
         expiresIn: 86400,
     });
@@ -24,14 +24,18 @@ router.post('/register', async (req, res) => {
         if(await User.findOne({ email })){
             return res.status(400).send({error: 'User already exists'});
         }
-        
+
         const user = await User.create(req.body);
 
         user.password = undefined;
 
-        return res.send({ 
+        let token = generateToken({id: user.id})
+
+        res.cookie('token', token, { maxAge: 86400 });
+
+        return res.send({
             user,
-            token: generateToken({id: user.id}),
+            token: token,
          });
 
     } catch (error) {
@@ -52,13 +56,14 @@ router.post('/authenticate', async (req, res) => {
         return res.status(400).send({error: 'Invalid password'});
     }
 
-    user.password = undefined;
+    let token = generateToken({id: user.id})
 
+    res.cookie('token', token, { maxAge: 86400 });
 
-    res.send({
-         user,
-         token: generateToken({id: user.id}),
-    });
+    return res.send({
+        user,
+        token: token,
+     });
 });
 
 router.post('/forgot_password', async (req, res) => {
@@ -96,7 +101,7 @@ router.post('/forgot_password', async (req, res) => {
             return res.send(200)
         });
 
-        
+
     } catch (error) {
         res.status(400).send({ error: 'Error on forgot password, try again'});
     }
@@ -128,7 +133,7 @@ router.post('/reset_password', async (req, res) => {
         await user.save();
 
         return res.sendStatus(200);
-        
+
     } catch (error) {
         res.status(400).send({ error: 'Cannot reset password, try again'});
     }
